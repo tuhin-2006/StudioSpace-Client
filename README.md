@@ -4,7 +4,8 @@
 
 - **Client GitHub Repository**: [https://github.com/tuhin-2006/StudioSpace-Client](https://github.com/tuhin-2006/StudioSpace-Client)
 - **Server GitHub Repository**: [https://github.com/tuhin-2006/StudioSpace-Server](https://github.com/tuhin-2006/StudioSpace-Server)
-- **Live Website URL**: [https://studiospace-client.vercel.app](https://studiospace-client.vercel.app) *(Deployable on Vercel)*
+- **Live Frontend URL**: [https://client-mocha-theta-65.vercel.app](https://client-mocha-theta-65.vercel.app)
+- **Live Backend API URL**: [https://server-taupe-theta-15.vercel.app/api](https://server-taupe-theta-15.vercel.app/api)
 
 ---
 
