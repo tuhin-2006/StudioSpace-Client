@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
@@ -24,8 +24,17 @@ export function Navbar() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or Escape key
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      setDropdownOpen(false);
+      setMobileMenuOpen(false);
+      dropdownButtonRef.current?.focus();
+    }
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -33,8 +42,12 @@ export function Navbar() {
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleKeyDown]);
 
   const navLinks = [
     { name: 'Home', href: '/' },
@@ -54,9 +67,13 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo with Aperture / Spotlight */}
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5 group min-h-[44px] min-w-[44px] focus:outline-none"
+            aria-label="StudioSpace Home"
+          >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-pink-500 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-              <Aperture className="w-6 h-6 animate-spin-slow group-hover:rotate-45 transition-transform duration-500" />
+              <Aperture className="w-6 h-6 animate-spin-slow group-hover:rotate-45 transition-transform duration-500" aria-hidden="true" />
             </div>
             <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 dark:from-white dark:via-slate-200 dark:to-slate-300 bg-clip-text text-transparent">
               Studio<span className="text-indigo-600 dark:text-indigo-400">Space</span>
@@ -64,22 +81,23 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav aria-label="Main navigation" className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => {
               const active = isActive(link.href);
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-colors relative ${
+                  aria-current={active ? 'page' : undefined}
+                  className={`px-3.5 py-2 rounded-lg text-sm font-semibold transition-colors relative min-h-[44px] flex items-center ${
                     active
-                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40'
+                      ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50/80 dark:bg-indigo-950/40'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
                   }`}
                 >
                   {link.name}
                   {active && (
-                    <span className="absolute bottom-0 left-3.5 right-3.5 h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full" />
+                    <span className="absolute bottom-1 left-3.5 right-3.5 h-0.5 bg-indigo-600 dark:bg-indigo-400 rounded-full" aria-hidden="true" />
                   )}
                 </Link>
               );
@@ -93,27 +111,34 @@ export function Navbar() {
             {user ? (
               <div className="relative" ref={dropdownRef}>
                 <button
+                  ref={dropdownButtonRef}
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2.5 p-1.5 pl-2.5 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all shadow-sm"
-                  title={user.name}
+                  aria-expanded={dropdownOpen}
+                  aria-haspopup="menu"
+                  aria-label={`User account menu for ${user.name}`}
+                  className="flex items-center gap-2.5 p-1.5 pl-3 rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all shadow-sm min-h-[44px]"
                 >
-                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 max-w-[100px] truncate">
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 max-w-[120px] truncate">
                     {user.name}
                   </span>
                   <div className="w-8 h-8 rounded-full overflow-hidden bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white ring-2 ring-indigo-500/20">
                     {user.photoURL ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                      <img src={user.photoURL} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <UserIcon className="w-4 h-4" />
+                      <UserIcon className="w-4 h-4" aria-hidden="true" />
                     )}
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                 </button>
 
                 {/* Authenticated Dropdown Menu */}
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div
+                    role="menu"
+                    aria-label="User account actions"
+                    className="absolute right-0 mt-2 w-64 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl py-2 z-50 animate-in fade-in zoom-in-95 duration-150"
+                  >
                     <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
                       <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
                       <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user.email}</p>
@@ -121,49 +146,54 @@ export function Navbar() {
 
                     <div className="py-1">
                       <Link
+                        role="menuitem"
                         href="/add-studio"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
-                        <PlusCircle className="w-4 h-4 text-indigo-500" />
-                        Add New Studio
+                        <PlusCircle className="w-4 h-4 text-indigo-500" aria-hidden="true" />
+                        <span>Add New Studio</span>
                       </Link>
                       <Link
+                        role="menuitem"
                         href="/my-listings"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
-                        <LayoutGrid className="w-4 h-4 text-violet-500" />
-                        My Studio Listings
+                        <LayoutGrid className="w-4 h-4 text-violet-500" aria-hidden="true" />
+                        <span>My Studio Listings</span>
                       </Link>
                       <Link
+                        role="menuitem"
                         href="/my-bookings"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
-                        <CalendarCheck className="w-4 h-4 text-emerald-500" />
-                        My Bookings
+                        <CalendarCheck className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                        <span>My Bookings</span>
                       </Link>
                       <Link
+                        role="menuitem"
                         href="/wishlist"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                       >
-                        <Heart className="w-4 h-4 text-pink-500" />
-                        Saved Wishlist
+                        <Heart className="w-4 h-4 text-pink-500" aria-hidden="true" />
+                        <span>Saved Wishlist</span>
                       </Link>
                     </div>
 
                     <div className="border-t border-slate-100 dark:border-slate-800 pt-1">
                       <button
+                        role="menuitem"
                         onClick={() => {
                           setDropdownOpen(false);
                           logout();
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors text-left font-medium"
                       >
-                        <LogOut className="w-4 h-4" />
-                        Logout
+                        <LogOut className="w-4 h-4" aria-hidden="true" />
+                        <span>Logout</span>
                       </button>
                     </div>
                   </div>
@@ -173,13 +203,13 @@ export function Navbar() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                  className="px-4 py-2 min-h-[44px] flex items-center text-sm font-semibold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                 >
                   Log in
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-500/25 hover:shadow-indigo-500/35 transition-all"
+                  className="px-5 py-2 min-h-[44px] flex items-center rounded-xl text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 shadow-md shadow-indigo-500/25 hover:shadow-indigo-500/35 transition-all"
                 >
                   Register
                 </Link>
@@ -192,10 +222,12 @@ export function Navbar() {
             <ThemeToggle />
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-              aria-label="Toggle menu"
+              className="p-2.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
             </button>
           </div>
         </div>
@@ -203,13 +235,17 @@ export function Navbar() {
 
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg px-4 pt-3 pb-6 space-y-2">
+        <nav
+          id="mobile-navigation"
+          aria-label="Mobile navigation"
+          className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg px-4 pt-3 pb-6 space-y-2 animate-in slide-in-from-top-4 duration-200"
+        >
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              className="block px-3 py-2.5 rounded-xl text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px] flex items-center"
             >
               {link.name}
             </Link>
@@ -224,65 +260,65 @@ export function Navbar() {
               <Link
                 href="/add-studio"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px]"
               >
-                <PlusCircle className="w-4 h-4 text-indigo-500" />
-                Add New Studio
+                <PlusCircle className="w-4 h-4 text-indigo-500" aria-hidden="true" />
+                <span>Add New Studio</span>
               </Link>
               <Link
                 href="/my-listings"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px]"
               >
-                <LayoutGrid className="w-4 h-4 text-violet-500" />
-                My Studio Listings
+                <LayoutGrid className="w-4 h-4 text-violet-500" aria-hidden="true" />
+                <span>My Studio Listings</span>
               </Link>
               <Link
                 href="/my-bookings"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px]"
               >
-                <CalendarCheck className="w-4 h-4 text-emerald-500" />
-                My Bookings
+                <CalendarCheck className="w-4 h-4 text-emerald-500" aria-hidden="true" />
+                <span>My Bookings</span>
               </Link>
               <Link
                 href="/wishlist"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[44px]"
               >
-                <Heart className="w-4 h-4 text-pink-500" />
-                Saved Wishlist
+                <Heart className="w-4 h-4 text-pink-500" aria-hidden="true" />
+                <span>Saved Wishlist</span>
               </Link>
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   logout();
                 }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-left min-h-[44px]"
               >
-                <LogOut className="w-4 h-4" />
-                Logout
+                <LogOut className="w-4 h-4" aria-hidden="true" />
+                <span>Logout</span>
               </button>
             </div>
           ) : (
-            <div className="border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-col gap-2">
+            <div className="border-t border-slate-200 dark:border-slate-800 pt-4 flex flex-col gap-2.5">
               <Link
                 href="/login"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200"
+                className="w-full text-center px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-800 dark:text-slate-200 min-h-[44px] flex items-center justify-center"
               >
                 Log in
               </Link>
               <Link
                 href="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className="w-full text-center px-4 py-2.5 rounded-xl bg-indigo-600 text-sm font-semibold text-white shadow-md shadow-indigo-500/20"
+                className="w-full text-center px-4 py-3 rounded-xl bg-indigo-600 text-sm font-bold text-white shadow-md shadow-indigo-500/20 min-h-[44px] flex items-center justify-center"
               >
                 Register
               </Link>
             </div>
           )}
-        </div>
+        </nav>
       )}
     </header>
   );

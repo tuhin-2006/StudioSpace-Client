@@ -21,7 +21,7 @@ function RegisterForm() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Validation rules (Requirements):
+  // Validation criteria:
   // 1. Length >= 6
   // 2. Contains uppercase [A-Z]
   // 3. Contains lowercase [a-z]
@@ -55,7 +55,6 @@ function RegisterForm() {
       );
 
       if (success) {
-        // Navigate user to login page as specified in requirements
         router.push(`/login${redirectTarget !== '/' ? `?redirect=${encodeURIComponent(redirectTarget)}` : ''}`);
       }
     } catch (err: any) {
@@ -78,24 +77,28 @@ function RegisterForm() {
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 py-12 bg-slate-50/60 dark:bg-slate-950">
-      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-xl p-8 space-y-6">
+    <div className="min-h-[85vh] flex items-center justify-center p-4 py-16 bg-slate-50/60 dark:bg-slate-950">
+      <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-2xl p-8 sm:p-9 space-y-7">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-pink-500 items-center justify-center text-white shadow-md shadow-indigo-500/25 mb-1">
-            <Aperture className="w-7 h-7" />
+          <div className="inline-flex w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-violet-600 to-pink-500 items-center justify-center text-white shadow-lg shadow-indigo-500/25 mb-2">
+            <Aperture className="w-7 h-7" aria-hidden="true" />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
             Create an Account
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Join StudioSpace to book creative workspaces or host your own facility.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Join StudioSpace to book creative workspaces or list your own facility.
           </p>
         </div>
 
         {/* Form Error Banner */}
         {formError && (
-          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs font-medium">
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs font-semibold"
+          >
             {formError}
           </div>
         )}
@@ -103,88 +106,113 @@ function RegisterForm() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            <label
+              htmlFor="register-name"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+            >
               Full Name *
             </label>
             <div className="relative">
-              <User className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+              <User className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400 pointer-events-none" aria-hidden="true" />
               <input
+                id="register-name"
                 type="text"
+                autoComplete="name"
                 required
                 placeholder="Sarah Jenkins"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white min-h-[44px]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            <label
+              htmlFor="register-email"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+            >
               Email Address *
             </label>
             <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+              <Mail className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400 pointer-events-none" aria-hidden="true" />
               <input
+                id="register-email"
                 type="email"
+                autoComplete="email"
                 required
                 placeholder="sarah@studiospace.io"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white min-h-[44px]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            <label
+              htmlFor="register-photo"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+            >
               Profile Photo URL
             </label>
             <div className="relative">
-              <ImageIcon className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+              <ImageIcon className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400 pointer-events-none" aria-hidden="true" />
               <input
+                id="register-photo"
                 type="url"
+                autoComplete="photo"
                 placeholder="https://images.unsplash.com/photo-..."
                 value={photoURL}
                 onChange={(e) => setPhotoURL(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white min-h-[44px]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+            <label
+              htmlFor="register-password"
+              className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5"
+            >
               Password *
             </label>
             <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+              <Lock className="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400 pointer-events-none" aria-hidden="true" />
               <input
+                id="register-password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                aria-describedby="password-rules"
                 required
                 placeholder="Create secure password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full pl-10 pr-12 py-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white min-h-[44px]"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                aria-label={showPassword ? 'Hide password text' : 'Show password text'}
+                className="absolute right-2 top-1.5 bottom-1.5 px-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center min-w-[36px]"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {showPassword ? <EyeOff className="w-4 h-4" aria-hidden="true" /> : <Eye className="w-4 h-4" aria-hidden="true" />}
               </button>
             </div>
 
-            {/* Password Validation Requirements Display */}
-            <div className="mt-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 space-y-1.5">
+            {/* Password Validation Requirements Display Linked via aria-describedby */}
+            <div
+              id="password-rules"
+              className="mt-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 space-y-2"
+            >
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
-                Password Criteria:
+                Password Criteria Checklist:
               </span>
               <div className="flex items-center gap-2 text-xs">
                 {hasMinLength ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
                 ) : (
-                  <X className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <X className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" aria-hidden="true" />
                 )}
                 <span className={hasMinLength ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-500'}>
                   Length must be at least 6 characters
@@ -192,9 +220,9 @@ function RegisterForm() {
               </div>
               <div className="flex items-center gap-2 text-xs">
                 {hasUppercase ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
                 ) : (
-                  <X className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <X className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" aria-hidden="true" />
                 )}
                 <span className={hasUppercase ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-500'}>
                   Must have an Uppercase letter (A-Z)
@@ -202,9 +230,9 @@ function RegisterForm() {
               </div>
               <div className="flex items-center gap-2 text-xs">
                 {hasLowercase ? (
-                  <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" aria-hidden="true" />
                 ) : (
-                  <X className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                  <X className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" aria-hidden="true" />
                 )}
                 <span className={hasLowercase ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-slate-500'}>
                   Must have a Lowercase letter (a-z)
@@ -216,10 +244,10 @@ function RegisterForm() {
           <button
             type="submit"
             disabled={submitting || !isPasswordValid}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm shadow-md shadow-indigo-600/25 disabled:opacity-50 transition-all flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold text-sm shadow-md shadow-indigo-600/25 disabled:opacity-50 transition-all flex items-center justify-center gap-2 min-h-[44px]"
           >
-            <span>{submitting ? 'Registering Account...' : 'Register'}</span>
-            <ArrowRight className="w-4 h-4" />
+            <span>{submitting ? 'Registering Account...' : 'Register Account'}</span>
+            <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </button>
         </form>
 
@@ -238,9 +266,9 @@ function RegisterForm() {
           type="button"
           onClick={handleGoogleLogin}
           disabled={submitting}
-          className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2.5 shadow-sm transition-all"
+          className="w-full py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2.5 shadow-sm transition-all min-h-[44px]"
         >
-          <svg className="w-4 h-4" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" viewBox="0 0 24 24" aria-hidden="true">
             <path
               fill="#4285F4"
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -266,7 +294,7 @@ function RegisterForm() {
           Already have an account?{' '}
           <Link
             href={`/login${redirectTarget !== '/' ? `?redirect=${encodeURIComponent(redirectTarget)}` : ''}`}
-            className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-block py-1"
           >
             Log In
           </Link>
@@ -280,7 +308,7 @@ export default function RegisterPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-[70vh] flex items-center justify-center">
+        <div className="min-h-[70vh] flex items-center justify-center" aria-label="Loading registration form">
           <div className="w-8 h-8 rounded-full border-2 border-indigo-600 border-t-transparent animate-spin" />
         </div>
       }

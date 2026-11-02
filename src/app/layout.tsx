@@ -21,12 +21,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
             <Suspense fallback={<header className="h-16 border-b border-slate-200 dark:border-slate-800" />}>
               <Navbar />
             </Suspense>
-            <main className="flex-grow">{children}</main>
+            <main id="main-content" tabIndex={-1} className="flex-grow focus:outline-none">
+              {children}
+            </main>
             <Footer />
             <Toaster position="top-right" richColors closeButton />
           </AuthProvider>

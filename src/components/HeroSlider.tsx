@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Sparkles, ArrowRight, Video, Camera, Mic } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, ArrowRight, Video, Camera, Mic, Play, Pause } from 'lucide-react';
 
 interface Slide {
   id: number;
   tag: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
   title: string;
   highlight: string;
   subtitle: string;
@@ -55,56 +55,83 @@ export function HeroSlider() {
   const [current, setCurrent] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
+  const prevSlide = useCallback(() => {
+    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+  }, []);
+
+  const nextSlide = useCallback(() => {
+    setCurrent((prev) => (prev + 1) % slides.length);
+  }, []);
+
   useEffect(() => {
     if (!isAutoPlaying) return;
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 6000);
+    const interval = setInterval(nextSlide, 6500);
     return () => clearInterval(interval);
-  }, [isAutoPlaying]);
+  }, [isAutoPlaying, nextSlide]);
 
-  const prevSlide = () => {
-    setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
-  };
-
-  const nextSlide = () => {
-    setCurrent((prev) => (prev + 1) % slides.length);
+  // Keyboard navigation for carousel
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      prevSlide();
+    } else if (e.key === 'ArrowRight') {
+      nextSlide();
+    }
   };
 
   const slide = slides[current];
   const Icon = slide.icon;
 
   return (
-    <div
-      className="relative w-full h-[580px] sm:h-[640px] lg:h-[700px] overflow-hidden bg-slate-950 text-white select-none"
+    <section
+      role="region"
+      aria-roledescription="carousel"
+      aria-label="Featured Studio Workspaces"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      className="relative w-full h-[580px] sm:h-[640px] lg:h-[700px] overflow-hidden bg-slate-950 text-white select-none focus:outline-none"
       onMouseEnter={() => setIsAutoPlaying(false)}
       onMouseLeave={() => setIsAutoPlaying(true)}
     >
-      {/* Background Image Slides with Smooth Crossfade */}
-      {slides.map((item, index) => (
-        <div
-          key={item.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === current ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
-          }`}
-          style={{ transition: 'opacity 1s ease-in-out, transform 8s ease' }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={item.image} alt={item.title} className="w-full h-full object-cover object-center" />
-          {/* Multi-layered cinematic overlay gradients */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent" />
-        </div>
-      ))}
+      {/* Background Image Slides with Accessible Announcer */}
+      <div className="sr-only" aria-live="polite">
+        Slide {current + 1} of {slides.length}: {slide.title} {slide.highlight}
+      </div>
+
+      {slides.map((item, index) => {
+        const isActive = index === current;
+        return (
+          <div
+            key={item.id}
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`${index + 1} of ${slides.length}`}
+            aria-hidden={!isActive}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'
+            }`}
+            style={{ transition: 'opacity 1s ease-in-out, transform 8s ease' }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.image}
+              alt=""
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Cinematic Multilayered Gradients */}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/65 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/45 to-transparent" />
+          </div>
+        );
+      })}
 
       {/* Hero Content Overlay */}
       <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
-        <div className="max-w-2xl space-y-6 animate-in fade-in slide-in-from-bottom-6 duration-700">
+        <div className="max-w-2xl space-y-6">
           {/* Category Tag Badge */}
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold text-indigo-300">
-            <Icon className="w-3.5 h-3.5 text-indigo-400" />
+            <Icon className="w-3.5 h-3.5 text-indigo-400" aria-hidden="true" />
             <span>{slide.tag}</span>
-            <span className="w-1 h-1 rounded-full bg-indigo-400" />
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" aria-hidden="true" />
             <span className="text-white/80">{slide.badge}</span>
           </div>
 
@@ -125,53 +152,88 @@ export function HeroSlider() {
           <div className="flex flex-wrap items-center gap-4 pt-2">
             <Link
               href="/studios"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[44px]"
             >
               <span>Explore Studios</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
             </Link>
 
             <Link
               href="/add-studio"
-              className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl font-bold text-sm bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] transition-all"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl font-bold text-sm bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md hover:scale-[1.02] active:scale-[0.98] transition-all min-h-[44px]"
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
+              <Sparkles className="w-4 h-4 text-amber-300" aria-hidden="true" />
               <span>Host Your Space</span>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Left / Right Nav Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/40 hover:bg-black/70 border border-white/20 text-white backdrop-blur-md transition-all hover:scale-110"
-        aria-label="Previous Slide"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </button>
+      {/* Carousel Controls Container (Accessible navigation + Pause button) */}
+      <div className="absolute bottom-6 left-4 right-4 sm:left-8 sm:right-8 flex items-center justify-between pointer-events-none max-w-7xl mx-auto">
+        {/* Play / Pause Toggle Button (WCAG 2.2.2 Pause, Stop, Hide) */}
+        <button
+          onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+          className="pointer-events-auto p-2.5 rounded-xl bg-black/50 hover:bg-black/80 border border-white/20 text-white backdrop-blur-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center gap-1.5 text-xs font-semibold"
+          aria-label={isAutoPlaying ? 'Pause automatic slide rotation' : 'Start automatic slide rotation'}
+        >
+          {isAutoPlaying ? (
+            <>
+              <Pause className="w-4 h-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Pause</span>
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Play</span>
+            </>
+          )}
+        </button>
 
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-black/40 hover:bg-black/70 border border-white/20 text-white backdrop-blur-md transition-all hover:scale-110"
-        aria-label="Next Slide"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </button>
+        {/* Center Pagination Dots */}
+        <div
+          role="tablist"
+          aria-label="Carousel Slides"
+          className="pointer-events-auto flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/15"
+        >
+          {slides.map((_, index) => (
+            <button
+              key={index}
+              role="tab"
+              aria-selected={index === current}
+              aria-label={`Slide ${index + 1}`}
+              onClick={() => setCurrent(index)}
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center p-0 bg-transparent border-0 focus:outline-none"
+            >
+              <span
+                className={`block transition-all rounded-full ${
+                  index === current
+                    ? 'w-7 h-2 bg-indigo-500 shadow-md shadow-indigo-500/50'
+                    : 'w-2 h-2 bg-white/40 hover:bg-white/80'
+                }`}
+              />
+            </button>
+          ))}
+        </div>
 
-      {/* Pagination Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
-        {slides.map((_, index) => (
+        {/* Prev / Next Arrows */}
+        <div className="pointer-events-auto flex items-center gap-2">
           <button
-            key={index}
-            onClick={() => setCurrent(index)}
-            className={`transition-all rounded-full ${
-              index === current ? 'w-8 h-2 bg-indigo-500 shadow-md shadow-indigo-500/50' : 'w-2 h-2 bg-white/40 hover:bg-white/70'
-            }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
+            onClick={prevSlide}
+            className="p-2.5 rounded-xl bg-black/50 hover:bg-black/80 border border-white/20 text-white backdrop-blur-md transition-all hover:scale-105 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Previous Slide"
+          >
+            <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="p-2.5 rounded-xl bg-black/50 hover:bg-black/80 border border-white/20 text-white backdrop-blur-md transition-all hover:scale-105 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Next Slide"
+          >
+            <ChevronRight className="w-5 h-5" aria-hidden="true" />
+          </button>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
